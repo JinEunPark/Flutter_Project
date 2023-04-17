@@ -73,7 +73,7 @@ class _AddTodoPageState extends State<AddTodoPage> {
       "is_completed": false,
     };
 
-    final url = 'http://api.nstack.in/v1/todos';
+    const url = 'http://api.nstack.in/v1/todos';
     final uri = Uri.parse(url);
     final response = await http.post(uri, body: jsonEncode(body),
         headers: {'Content-Type': 'application/json'}
@@ -81,6 +81,8 @@ class _AddTodoPageState extends State<AddTodoPage> {
     //json encode 해서 데이터를 전달함.
     //원레 비동기 함수는 future 에 싸여져 나와서 이를 처리하기 위해서 then 절을 사용한다 then((변수){변수처리함수}) 로 작성하지 않기 위해서 await 키워드로 처리했다.
     if(response.statusCode == 201){
+      titleController.text = '';// controller 문자열을 초기화함.
+      descriptionController.text = '';
       showSuccessMessage("success!!");
 
     }else{
