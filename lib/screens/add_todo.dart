@@ -4,7 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http; //http 의존성 추가함.
 
 class AddTodoPage extends StatefulWidget {
-  const AddTodoPage({Key? key}) : super(key: key);
+  final Map? todo;
+  const AddTodoPage({
+    super.key,
+    this.todo,
+
+  });
 
   @override
   State<AddTodoPage> createState() => _AddTodoPageState();
@@ -15,11 +20,27 @@ class _AddTodoPageState extends State<AddTodoPage> {
   TextEditingController titleController = TextEditingController(); // controller 생성함.
   TextEditingController descriptionController = TextEditingController();
 
+  bool isEdit = false;
+
+  @override
+  void initState(){
+    super.initState();
+    final todo = widget.todo;
+    if(todo != null){
+      isEdit = true;
+      final title = todo['title'];
+      final description = todo['description'];
+      titleController.text =  title;
+      descriptionController.text = description;
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: const Text('Add Todo'),
+          title: Text(isEdit ? 'Edit Todo': 'AddTodo'),
         ),
         body: ListView(
 
@@ -45,8 +66,8 @@ class _AddTodoPageState extends State<AddTodoPage> {
             const SizedBox(height: 20,),
 
             ElevatedButton(
-                child: const Text("submit!"),
-                onPressed: submitData
+                onPressed: isEdit ? updateData : submitData,
+                child: Text(isEdit ? 'update!': 'submit!')
             )
 
           ],
@@ -54,6 +75,39 @@ class _AddTodoPageState extends State<AddTodoPage> {
     );
   }
 
+  Future<void> updateData() async{
+
+    final todo = widget.todo;
+    if (todo == null){
+      print('You cna not call updated without todo data');
+      return;
+    }
+    final id = todo['_id'];
+    final title = titleController.text;
+    final description = descriptionController.text;
+
+    final body = {
+      "title": title,
+      "description": description,
+      "is_completed": false,
+    };
+
+    final url = 'http://api.nstack.in/v1/todos/$id';
+    final uri = Uri.parse(url);
+    final response = await http.put(uri, body: jsonEncode(body),
+        headers: {'Content-Type': 'application/json'}
+    ); //await 키워드를 사용해서 Future로 감싼 객체의 데이터를 받을 수도 있다.
+
+    if(response.statusCode == 200){
+      titleController.text = '';// controller 문자열을 초기화함.
+      descriptionController.text = '';
+      showSuccessMessage(" updating success!!");
+
+    }else{
+      showErrorMessage("updating Fail!!");
+    }
+
+  }
   // Future<int> 라는 상자가 있는데, 이 상자는 지금은 닫혀있다. 하지만 이 상자를 준 함수가 말한다.
   //
   // "지금은 그 상자가 닫혀있지만, 나중에 열리면 int 나 error 가 나올거야. 두 경우를 모두 대비해 줘."
